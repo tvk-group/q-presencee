@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Q-Presence — Biometric Proof-of-Presence & Identity Verification Layer</title>
+  <meta name="description" content="Q-Presence is a biometric proof-of-presence and identity verification module for the SOVRA / Entelekron ecosystem, designed for secure presence validation, access events, wallet identity, governance participation, and quantum-resistant verification concepts." />
+  <meta property="og:title" content="Q-Presence — Biometric Proof-of-Presence Layer" />
+  <meta property="og:description" content="A secure identity and proof-of-presence layer for physical and digital verification across the SOVRA / Entelekron ecosystem." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#f8fbff" />
+  <link rel="canonical" href="https://www.q-presencee.com/" />
+
+  <style>
+    :root {
+      --bg: #f8fbff;
+      --paper: rgba(255,255,255,.84);
+      --ink: #07111f;
+      --muted: #627086;
+      --line: rgba(15,23,42,.12);
+      --blue: #2563eb;
+      --cyan: #06b6d4;
+      --violet: #7c3aed;
+      --aqua: #14b8a6;
+      --lime: #84cc16;
+      --dark: #020617;
+      --shadow: 0 28px 90px rgba(15,23,42,.13);
+      --radius: 30px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 8%, rgba(20,184,166,.20), transparent 34rem),
+        radial-gradient(circle at 88% 12%, rgba(37,99,235,.18), transparent 34rem),
+        radial-gradient(circle at 50% 62%, rgba(124,58,237,.10), transparent 42rem),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 54%, #eefcff 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(15,23,42,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,23,42,.035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 78%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1200px, calc(100% - 40px)); margin: 0 auto; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,.78);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav {
+      min-height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 950;
+      letter-spacing: -.05em;
+      font-size: 1.22rem;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: conic-gradient(from 180deg, var(--aqua), var(--cyan), var(--blue), var(--violet), var(--aqua));
+      box-shadow: 0 16px 42px rgba(20,184,166,.25);
+      position: relative;
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,.92);
+    }
+
+    .brand-mark::after {
+      content: "Q";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 950;
+      font-size: 1.05rem;
+      text-shadow: 0 2px 12px rgba(0,0,0,.16);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: var(--muted);
+      font-weight: 750;
+      font-size: .92rem;
+    }
+
+    .nav-links a:hover { color: var(--ink); }
+
+    .nav-cta {
+      color: white !important;
+      background: var(--dark);
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 900;
+      box-shadow: 0 14px 34px rgba(2,6,23,.17);
+    }
+
+    .language-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .language-select {
+      appearance: none;
+      -webkit-appearance: none;
+      min-height: 42px;
+      max-width: 150px;
+      padding: 0 38px 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.88);
+      color: var(--ink);
+      font-weight: 850;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .language-wrap::after {
+      content: "⌄";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-55%);
+      color: var(--muted);
+      pointer-events: none;
+      font-weight: 950;
+    }
+
+    .mobile-toggle {
+      display: none;
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .mobile-toggle span {
+      width: 20px;
+      height: 2px;
+      background: var(--ink);
+      border-radius: 999px;
+      transition: .18s;
+    }
+
+    .mobile-menu {
+      display: none;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(18px);
+    }
+
+    .mobile-menu-inner {
+      width: min(1200px, calc(100% - 40px));
+      margin: 0 auto;
+      display: grid;
+      gap: 10px;
+      padding: 16px 0 22px;
+    }
+
+    .mobile-menu a, .mobile-menu label {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: white;
+      font-weight: 850;
+    }
+
+    .mobile-menu label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: .82rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .mobile-menu .language-select {
+      max-width: none;
+      width: 100%;
+      border-radius: 14px;
+      background: var(--bg);
+    }
+
+    body.menu-open .mobile-menu { display: block; }
+    body.menu-open .mobile-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.menu-open .mobile-toggle span:nth-child(2) { opacity: 0; }
+    body.menu-open .mobile-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .hero {
+      padding: 96px 0 76px;
+      position: relative;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.06fr .94fr;
+      gap: 54px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.78);
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 900;
+      box-shadow: 0 10px 34px rgba(15,23,42,.07);
+    }
+
+    .pulse {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--aqua);
+      box-shadow: 0 0 0 7px rgba(20,184,166,.14);
+    }
+
+    h1 {
+      margin: 24px 0 18px;
+      font-size: clamp(3.1rem, 8.8vw, 7.6rem);
+      line-height: .86;
+      letter-spacing: -.095em;
+      font-weight: 950;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #020617 4%, var(--aqua), var(--blue), var(--violet));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      margin: 0 0 22px;
+      max-width: 880px;
+      font-size: clamp(1.36rem, 3vw, 2.45rem);
+      line-height: 1.06;
+      letter-spacing: -.06em;
+      font-weight: 920;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.78;
+    }
+
+    .disclosure {
+      margin-top: 20px;
+      max-width: 760px;
+      padding: 14px 16px;
+      border: 1px solid rgba(20,184,166,.24);
+      border-radius: 20px;
+      background: rgba(255,255,255,.72);
+      color: #2a675f;
+      font-size: .92rem;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 34px;
+    }
+
+    .btn {
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.86);
+      font-weight: 900;
+      transition: .18s;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn.primary {
+      color: white;
+      border: none;
+      background: linear-gradient(135deg, var(--aqua), var(--blue));
+      box-shadow: 0 20px 52px rgba(20,184,166,.25);
+    }
+
+    .presence-card {
+      min-height: 540px;
+      border-radius: 42px;
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 50% 42%, rgba(20,184,166,.24), transparent 15rem),
+        radial-gradient(circle at 76% 18%, rgba(37,99,235,.22), transparent 16rem),
+        radial-gradient(circle at 30% 72%, rgba(124,58,237,.13), transparent 16rem),
+        linear-gradient(180deg, rgba(255,255,255,.86), rgba(238,252,255,.82));
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      padding: 26px;
+    }
+
+    .presence-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(15,23,42,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,23,42,.045) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: radial-gradient(circle at center, black, transparent 76%);
+    }
+
+    .biometric-ring {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: 300px;
+      height: 300px;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      border: 1px solid rgba(20,184,166,.26);
+      background:
+        radial-gradient(circle, rgba(255,255,255,.94) 0 18%, transparent 19%),
+        conic-gradient(from 0deg, rgba(20,184,166,.17), rgba(37,99,235,.22), rgba(124,58,237,.16), rgba(132,204,22,.12), rgba(20,184,166,.17));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 28px 70px rgba(15,23,42,.12);
+      z-index: 1;
+      animation: presencePulse 5s ease-in-out infinite;
+    }
+
+    @keyframes presencePulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.035); }
+    }
+
+    .biometric-ring::before {
+      content: "";
+      position: absolute;
+      inset: 38px;
+      border-radius: 999px;
+      border: 2px dashed rgba(20,184,166,.38);
+      animation: rotate 18s linear infinite;
+    }
+
+    .biometric-ring::after {
+      content: "";
+      position: absolute;
+      inset: 82px;
+      border-radius: 999px;
+      border: 8px solid rgba(255,255,255,.82);
+      box-shadow:
+        inset 0 0 0 1px rgba(20,184,166,.22),
+        0 0 0 1px rgba(20,184,166,.12);
+    }
+
+    .presence-center {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: 96px;
+      height: 96px;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      background: white;
+      border: 1px solid rgba(20,184,166,.18);
+      box-shadow: 0 20px 50px rgba(15,23,42,.14);
+      color: var(--aqua);
+      font-weight: 950;
+      font-size: 1.45rem;
+    }
+
+    @keyframes rotate { to { transform: rotate(360deg); } }
+
+    .float-chip {
+      position: absolute;
+      z-index: 4;
+      padding: 10px 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 850;
+      box-shadow: 0 16px 38px rgba(15,23,42,.10);
+    }
+
+    .chip1 { top: 34px; left: 34px; }
+    .chip2 { top: 74px; right: 34px; }
+    .chip3 { bottom: 138px; left: 46px; }
+
+    .status-card {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 28px;
+      z-index: 5;
+      padding: 22px;
+      border-radius: 26px;
+      color: white;
+      background: rgba(2,6,23,.93);
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 22px 60px rgba(2,6,23,.28);
+    }
+
+    .status-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.14rem;
+      letter-spacing: -.04em;
+    }
+
+    .status-card p {
+      margin: 0;
+      color: #d9fffb;
+      line-height: 1.65;
+    }
+
+    section { padding: 84px 0; }
+
+    .section-head {
+      max-width: 860px;
+      margin-bottom: 36px;
+    }
+
+    .kicker {
+      margin-bottom: 12px;
+      color: var(--aqua);
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      font-size: .8rem;
+      font-weight: 950;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(2rem, 4.4vw, 4rem);
+      line-height: .98;
+      letter-spacing: -.07em;
+      font-weight: 950;
+    }
+
+    .section-text {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.75;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .statement {
+      padding: 38px;
+      border-radius: 32px;
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .statement.big {
+      color: white;
+      background: linear-gradient(135deg, var(--aqua), var(--blue));
+    }
+
+    .statement h3 {
+      margin: 0 0 16px;
+      font-size: 1.7rem;
+      line-height: 1.08;
+      letter-spacing: -.05em;
+    }
+
+    .statement p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .statement.big p { color: rgba(255,255,255,.88); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      min-height: 232px;
+      padding: 26px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.84);
+      box-shadow: 0 16px 50px rgba(15,23,42,.08);
+    }
+
+    .icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      color: var(--aqua);
+      font-weight: 950;
+      background: linear-gradient(135deg, rgba(20,184,166,.12), rgba(37,99,235,.12));
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 1.13rem;
+      letter-spacing: -.035em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.66;
+      font-size: .96rem;
+    }
+
+    .dark-band {
+      padding: 58px;
+      border-radius: 46px;
+      color: white;
+      background:
+        radial-gradient(circle at top left, rgba(20,184,166,.28), transparent 34rem),
+        radial-gradient(circle at bottom right, rgba(37,99,235,.24), transparent 34rem),
+        #020617;
+      box-shadow: var(--shadow);
+    }
+
+    .dark-band p,
+    .dark-band .section-text { color: #d9fffb; opacity: .88; }
+
+    .stack {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .layers {
+      display: grid;
+      gap: 12px;
+    }
+
+    .layer {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.07);
+    }
+
+    .layer span:first-child { font-weight: 900; }
+    .layer span:last-child {
+      color: #99f6e4;
+      font-size: .86rem;
+      font-weight: 850;
+      text-align: right;
+    }
+
+    .process {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .process-step {
+      padding: 24px;
+      border-radius: 26px;
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 42px rgba(15,23,42,.07);
+    }
+
+    .process-step strong {
+      display: block;
+      color: var(--aqua);
+      margin-bottom: 12px;
+      font-size: .9rem;
+    }
+
+    .process-step h3 {
+      margin: 0 0 10px;
+      letter-spacing: -.04em;
+    }
+
+    .process-step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .timeline { display: grid; gap: 16px; }
+
+    .step {
+      display: grid;
+      grid-template-columns: 94px 1fr;
+      gap: 18px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: white;
+      box-shadow: 0 14px 42px rgba(15,23,42,.07);
+    }
+
+    .step strong { color: var(--aqua); }
+    .step h3 { margin: 0 0 8px; letter-spacing: -.035em; }
+    .step p { margin: 0; color: var(--muted); line-height: 1.68; }
+
+    .cta {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      align-items: center;
+      gap: 28px;
+      padding: 58px;
+      border-radius: 44px;
+      color: white;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,.24), transparent 25rem),
+        linear-gradient(135deg, #020617, #0f766e 58%, #1e3a8a);
+      box-shadow: var(--shadow);
+    }
+
+    .cta p { color: #d9fffb; line-height: 1.75; opacity: .88; }
+    .cta .btn { color: white; background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.18); }
+    .cta .btn.primary { background: linear-gradient(135deg, var(--aqua), var(--blue)); }
+
+    footer {
+      padding: 40px 0 56px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid, .split, .stack, .cta { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr 1fr; }
+      .process { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+      .mobile-toggle { display: inline-flex; }
+      .dark-band, .cta { padding: 34px; border-radius: 32px; }
+    }
+
+    @media (max-width: 640px) {
+      .container { width: min(100% - 28px, 1200px); }
+      .hero { padding-top: 56px; }
+      h1 { font-size: clamp(3rem, 17vw, 5rem); }
+      .cards, .process { grid-template-columns: 1fr; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; }
+      .step { grid-template-columns: 1fr; }
+      .footer-row { flex-direction: column; }
+      .biometric-ring { width: 230px; height: 230px; }
+      .presence-center { width: 82px; height: 82px; }
+      .chip2 { top: 82px; right: 22px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container nav">
+      <a href="/" class="brand" aria-label="Q-Presence home">
+        <span class="brand-mark"></span>
+        <span>Q-Presence</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#protocol">Protocol</a>
+        <a href="#features">Features</a>
+        <a href="#process">How It Works</a>
+        <a href="#ecosystem">Ecosystem</a>
+        <a href="#roadmap">Roadmap</a>
+        <span class="language-wrap">
+          <select class="language-select" aria-label="Select language" data-language-select>
+            <option value="/" selected>🇬🇧 English</option>
+            <option value="/de/">🇩🇪 Deutsch</option>
+            <option value="/tr/">🇹🇷 Türkçe</option>
+            <option value="/fr/">🇫🇷 Français</option>
+            <option value="/es/">🇪🇸 Español</option>
+            <option value="/it/">🇮🇹 Italiano</option>
+            <option value="/ru/">🇷🇺 Русский</option>
+          </select>
+        </span>
+        <a href="#contact" class="nav-cta">Contact</a>
+      </nav>
+
+      <button class="mobile-toggle" type="button" aria-label="Open menu" aria-expanded="false" data-mobile-toggle>
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="mobile-menu" data-mobile-menu>
+      <div class="mobile-menu-inner">
+        <a href="#protocol">Protocol</a>
+        <a href="#features">Features</a>
+        <a href="#process">How It Works</a>
+        <a href="#ecosystem">Ecosystem</a>
+        <a href="#roadmap">Roadmap</a>
+        <label>
+          Language
+          <select class="language-select" aria-label="Select language" data-language-select>
+            <option value="/" selected>🇬🇧 English</option>
+            <option value="/de/">🇩🇪 Deutsch</option>
+            <option value="/tr/">🇹🇷 Türkçe</option>
+            <option value="/fr/">🇫🇷 Français</option>
+            <option value="/es/">🇪🇸 Español</option>
+            <option value="/it/">🇮🇹 Italiano</option>
+            <option value="/ru/">🇷🇺 Русский</option>
+          </select>
+        </label>
+        <a href="#contact" class="nav-cta">Contact</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow"><span class="pulse"></span> Biometric Presence · Identity · Access Verification</div>
+          <h1 class="gradient-text">Q-Presence</h1>
+          <p class="subtitle">A quantum-ready proof-of-presence and identity verification layer for sovereign digital ecosystems.</p>
+          <p class="lead">
+            Q-Presence is the biometric and contextual proof-of-presence module of the SOVRA / Entelekron ecosystem. It is designed to verify whether a person, wallet, device, validator, or authorized participant is genuinely present, active, and permitted to perform a sensitive action.
+          </p>
+          <div class="disclosure">
+            Q-Presence is a security and identity infrastructure concept. Biometric, KYC, access-control, and quantum-resistant features require strict legal, privacy, consent, and regulatory review before production deployment.
+          </div>
+          <div class="actions">
+            <a class="btn primary" href="#protocol">Explore Q-Presence →</a>
+            <a class="btn" href="#process">How It Works</a>
+            <a class="btn" href="#contact">Partner Access</a>
+          </div>
+        </div>
+
+        <aside class="presence-card" aria-label="Q-Presence biometric proof visual">
+          <span class="float-chip chip1">Biometric Signal</span>
+          <span class="float-chip chip2">Presence Verified</span>
+          <span class="float-chip chip3">Identity · Wallet · Access</span>
+          <div class="biometric-ring"></div>
+          <div class="presence-center">ID</div>
+          <div class="status-card">
+            <strong>Q-Presence / Verification Runtime</strong>
+            <p>Confirming who is present, what device or wallet is active, when the action occurred, and whether permission exists.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="protocol">
+      <div class="container split">
+        <div class="statement big">
+          <h3>Q-Presence proves presence before power is granted.</h3>
+          <p>It is designed for moments where identity, physical presence, wallet ownership, device trust, and permission must be verified before execution.</p>
+        </div>
+        <div class="statement">
+          <h3>Built for secure AI-chain operations</h3>
+          <p>Q-Presence can connect with SOVRA, EnteleWallet, ChronoSeal, GraphVAULT, MindDAO, validator systems, and future real-world access infrastructure.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="container">
+        <div class="section-head">
+          <div class="kicker">Core Features</div>
+          <h2>A presence and identity layer for secure digital and physical actions.</h2>
+          <p class="section-text">Q-Presence is designed to combine biometric signals, wallet identity, device trust, contextual verification, timestamps, and permission logic into a unified proof layer.</p>
+        </div>
+
+        <div class="cards">
+          <article class="card"><div class="icon">01</div><h3>Biometric Presence</h3><p>Support for face, fingerprint, liveness, voice, or future biometric signals where legally permitted and consent-based.</p></article>
+          <article class="card"><div class="icon">02</div><h3>Wallet Identity Binding</h3><p>Connect verified identity events to EnteleWallet, TVK Wallet, validator accounts, DAO profiles, and secure user roles.</p></article>
+          <article class="card"><div class="icon">03</div><h3>Liveness & Anti-Spoofing</h3><p>Conceptual protection against fake presence, replay attacks, duplicate participation, and unauthorized action attempts.</p></article>
+          <article class="card"><div class="icon">04</div><h3>Access Control</h3><p>Enable secure approval gates for dashboards, documents, vaults, validator controls, governance voting, and enterprise systems.</p></article>
+          <article class="card"><div class="icon">05</div><h3>ChronoSeal Proof</h3><p>Timestamp and seal identity events, presence checks, access approvals, and sensitive actions into auditable proof records.</p></article>
+          <article class="card"><div class="icon">06</div><h3>Quantum-Ready Concepts</h3><p>Future-ready architecture for stronger cryptography, post-quantum signature concepts, and resilient verification flows.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="process">
+      <div class="container">
+        <div class="section-head">
+          <div class="kicker">How It Works</div>
+          <h2>From identity signal to permissioned action.</h2>
+          <p class="section-text">Q-Presence follows a structured verification flow: identify, validate, bind, seal, and authorize.</p>
+        </div>
+
+        <div class="process">
+          <div class="process-step"><strong>Step 01</strong><h3>Identify</h3><p>A user, wallet, validator, device, or participant requests access or performs a sensitive action.</p></div>
+          <div class="process-step"><strong>Step 02</strong><h3>Validate</h3><p>Biometric, device, location-context, session, or wallet-based signals are checked according to policy.</p></div>
+          <div class="process-step"><strong>Step 03</strong><h3>Seal</h3><p>The verification event is timestamped and connected to ChronoSeal or GraphVAULT for auditability.</p></div>
+          <div class="process-step"><strong>Step 04</strong><h3>Authorize</h3><p>The system grants or denies access based on verified presence, role, permission, and risk context.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ecosystem">
+      <div class="container">
+        <div class="dark-band stack">
+          <div>
+            <div class="kicker">SOVRA / Entelekron Ecosystem</div>
+            <h2>The identity and presence gate for intelligent infrastructure.</h2>
+            <p class="section-text">Q-Presence strengthens the ecosystem by validating real participation, secure access, wallet actions, governance votes, validator roles, and sensitive AI-chain operations.</p>
+          </div>
+          <div class="layers">
+            <div class="layer"><span>EnteleWallet</span><span>Wallet Identity · User Roles</span></div>
+            <div class="layer"><span>ChronoSeal</span><span>Timestamped Presence Proof</span></div>
+            <div class="layer"><span>GraphVAULT</span><span>Identity Graph · Event History</span></div>
+            <div class="layer"><span>MindDAO</span><span>Verified Governance Participation</span></div>
+            <div class="layer"><span>SOVRA Core</span><span>Agent Access · Secure Actions</span></div>
+            <div class="layer"><span>EnteleCLOS</span><span>Security · Forensics · Audit</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="usecases">
+      <div class="container">
+        <div class="section-head">
+          <div class="kicker">Use Cases</div>
+          <h2>Designed for systems where “who is present” matters.</h2>
+          <p class="section-text">Q-Presence can support DAO participation, validator access, enterprise security, wallet identity, digital signatures, smart facilities, and sensitive AI operations.</p>
+        </div>
+
+        <div class="cards">
+          <article class="card"><div class="icon">DAO</div><h3>Verified DAO Voting</h3><p>Reduce duplicate participation and strengthen governance with verified identity and presence-based voting events.</p></article>
+          <article class="card"><div class="icon">WAL</div><h3>Wallet Security</h3><p>Require biometric or contextual proof before high-risk wallet actions, approvals, transfers, or account changes.</p></article>
+          <article class="card"><div class="icon">VAL</div><h3>Validator Access</h3><p>Protect validator dashboards, reward controls, governance keys, and node administration interfaces.</p></article>
+          <article class="card"><div class="icon">DOC</div><h3>Document Approval</h3><p>Verify presence before signing, sealing, approving, or submitting sensitive documents and corporate records.</p></article>
+          <article class="card"><div class="icon">SEC</div><h3>Enterprise Access</h3><p>Support access control for staff, secure rooms, restricted apps, infrastructure systems, and internal workflows.</p></article>
+          <article class="card"><div class="icon">AI</div><h3>AI Action Control</h3><p>Require human presence confirmation before SOVRA agents execute high-risk operations or irreversible actions.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="container">
+        <div class="section-head">
+          <div class="kicker">Roadmap</div>
+          <h2>From presence concept to secure identity infrastructure.</h2>
+        </div>
+
+        <div class="timeline">
+          <div class="step"><strong>Phase 01</strong><div><h3>Identity Model</h3><p>Define presence proofs, identity events, wallet bindings, consent logic, and verification risk levels.</p></div></div>
+          <div class="step"><strong>Phase 02</strong><div><h3>Proof Event Layer</h3><p>Connect presence checks with ChronoSeal timestamps, GraphVAULT history, and EnteleWallet identity records.</p></div></div>
+          <div class="step"><strong>Phase 03</strong><div><h3>Access SDK</h3><p>Create developer-ready logic for dashboards, wallets, DAO tools, enterprise systems, and validator portals.</p></div></div>
+          <div class="step"><strong>Phase 04</strong><div><h3>Quantum-Ready Expansion</h3><p>Research post-quantum signature flows, stronger authentication, and resilient identity verification architecture.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="container">
+        <div class="cta">
+          <div>
+            <div class="kicker">Q-Presence Network</div>
+            <h2>Build verified presence into your identity, wallet, or AI system.</h2>
+            <p>For biometric technology partners, wallet builders, DAO platforms, validator operators, enterprise security teams, and SOVRA / Entelekron ecosystem collaborators.</p>
+          </div>
+          <div class="actions">
+            <a class="btn primary" href="mailto:team@q-presencee.com">Contact Q-Presence</a>
+            <a class="btn" href="https://www.sovra.network/">SOVRA Network</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-row">
+      <div>© 2026 Q-Presence | A SOVRA / Entelekron Proof-of-Presence Module.</div>
+      <div class="footer-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/disclaimer.html">Disclaimer</a>
+        <a href="https://www.sovra.network/">SOVRA</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const mobileToggle = document.querySelector('[data-mobile-toggle]');
+    const mobileMenu = document.querySelector('[data-mobile-menu]');
+    const languageSelects = document.querySelectorAll('[data-language-select]');
+
+    if (mobileToggle && mobileMenu) {
+      mobileToggle.addEventListener('click', () => {
+        const isOpen = document.body.classList.toggle('menu-open');
+        mobileToggle.setAttribute('aria-expanded', String(isOpen));
+      });
+
+      mobileMenu.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+          document.body.classList.remove('menu-open');
+          mobileToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    languageSelects.forEach((select) => {
+      select.addEventListener('change', (event) => {
+        const target = event.target.value;
+        if (target) window.location.href = target;
+      });
+    });
+  </script>
+</body>
+</html>
